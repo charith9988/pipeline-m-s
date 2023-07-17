@@ -1,0 +1,29 @@
+pipeline {
+  agent any
+ 
+  stages {
+    stage('Build') {
+      steps {
+        // Checkout source code from your version control system
+        git 'https://github.com/your-repo.git'
+       
+        // Build your Java code
+        sh 'mvn clean package'
+      }
+    }
+   
+    stage('Deploy') {
+      agent { label 'slave-node' } // Specify the label of your slave node
+     
+      steps {
+        // Copy the built artifact to the slave node
+        sh 'scp target/your-app.jar slave-node:/path/to/destination/'
+       
+        // SSH into the slave node and start the application
+        sshagent(credentials: ['your-ssh-credential-id']) {
+          sh 'ssh -o StrictHostKeyChecking=no slave-node "java -jar /path/to/destination/your-app.jar &"'
+        }
+      }
+    }
+  }
+}
